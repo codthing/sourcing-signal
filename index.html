@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SourcingSignal — China sourcing decisions for AI assistants</title>
+<meta name="description" content="SourcingSignal is an MCP server that turns a product idea and a target price into a sourcing decision: 1688 supplier prices, MOQ, landed cost, margin, and a red/yellow/green verdict.">
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel-2:#161e29; --line:#22303f;
+    --text:#e8eef6; --muted:#9db0c4; --accent:#4ade80; --accent-dim:#22c55e;
+    --warn:#fbbf24; --bad:#f87171; --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  header{
+    position:sticky;top:0;z-index:20;background:rgba(11,15,20,.86);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.01em}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(74,222,128,.14)}
+  .nav-links{display:flex;gap:26px;font-size:14px;color:var(--muted)}
+  .nav-links a:hover{color:var(--text)}
+  .btn{
+    display:inline-block;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;
+    background:var(--accent);color:#052e16;border:1px solid transparent;transition:.15s;
+  }
+  .btn:hover{background:#86efac}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:#3b4d61;background:var(--panel)}
+  section{padding:72px 0;border-bottom:1px solid var(--line)}
+  .hero{padding:88px 0 72px}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--accent);border:1px solid rgba(74,222,128,.35);
+    background:rgba(74,222,128,.08);padding:6px 12px;border-radius:999px;margin-bottom:22px;
+  }
+  h1{font-size:46px;line-height:1.15;letter-spacing:-.02em;margin:0 0 18px;max-width:820px}
+  .lede{font-size:18px;color:var(--muted);max-width:680px;margin:0 0 30px}
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .cta-note{font-size:13px;color:var(--muted)}
+  h2{font-size:28px;letter-spacing:-.01em;margin:0 0 10px}
+  .sub{color:var(--muted);max-width:680px;margin:0 0 34px}
+  .grid{display:grid;gap:18px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card h3{margin:0 0 8px;font-size:16px;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .num{
+    display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;
+    background:var(--panel-2);border:1px solid var(--line);font-size:13px;color:var(--accent);margin-bottom:14px;
+  }
+  ul.checks{list-style:none;padding:0;margin:14px 0 0}
+  ul.checks li{position:relative;padding-left:24px;margin:10px 0;color:var(--muted);font-size:14px}
+  ul.checks li::before{content:"";position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:2px;background:var(--accent)}
+  .code{
+    background:#0a0e13;border:1px solid var(--line);border-radius:12px;overflow:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.75;
+  }
+  .code pre{margin:0;padding:20px}
+  .k{color:#93c5fd}.s{color:#fcd34d}.g{color:var(--accent)}.m{color:var(--muted)}
+  .plans{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .plan{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px;display:flex;flex-direction:column}
+  .plan.featured{border-color:rgba(74,222,128,.5);background:linear-gradient(180deg,rgba(74,222,128,.06),transparent 60%),var(--panel)}
+  .plan .tag{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:8px}
+  .price{font-size:38px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px}
+  .price span{font-size:15px;font-weight:500;color:var(--muted)}
+  .plan ul{list-style:none;padding:0;margin:18px 0 26px;font-size:14px;color:var(--muted)}
+  .plan li{margin:9px 0;padding-left:20px;position:relative}
+  .plan li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .plan .btn{margin-top:auto;text-align:center}
+  details{border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:var(--panel);margin-bottom:10px}
+  details summary{cursor:pointer;font-weight:600;font-size:15px}
+  details p{color:var(--muted);font-size:14px;margin:12px 0 0}
+  .legal{font-size:13px;color:var(--muted)}
+  .legal h3{color:var(--text);font-size:14px;margin:22px 0 6px}
+  footer{padding:36px 0;font-size:13px;color:var(--muted)}
+  .foot{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .foot a:hover{color:var(--text)}
+  @media (max-width:860px){
+    h1{font-size:34px}.g3,.g2,.plans{grid-template-columns:1fr}
+    .nav-links{display:none}
+    section{padding:56px 0}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="dot"></span>SourcingSignal</div>
+    <nav class="nav-links">
+      <a href="#what">What you get</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn" href="#pricing">Get access</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="badge">Early access</span>
+      <h1>Turn a product idea and a target price into a sourcing decision.</h1>
+      <p class="lede">
+        SourcingSignal is an MCP server for AI assistants. Ask it for any product and it returns 1688 supplier
+        offers with MOQ, supplier risk, landed cost, margin at your selling price, and a red / yellow / green verdict
+        — inside Claude, Cursor, VS Code, or any MCP-compatible client.
+      </p>
+      <div class="cta-row">
+        <a class="btn" href="mailto:sourcingsignal@protonmail.com?subject=SourcingSignal%20early%20access">Request early access</a>
+        <a class="btn btn-ghost" href="https://github.com/codthing/sourcing-signal">View documentation</a>
+      </div>
+      <p class="cta-note" style="margin-top:16px">
+        Hosted endpoint is being finalized. Subscribers are provisioned within 24 hours, and the first payment is fully
+        refundable within 7 days.
+      </p>
+    </div>
+  </section>
+
+  <section id="what">
+    <div class="wrap">
+      <h2>What you get</h2>
+      <p class="sub">Two tools, one goal: tell you whether a product is worth sourcing, not just dump data on you.</p>
+      <div class="grid g3">
+        <div class="card">
+          <h3>sourcing_report</h3>
+          <p>Input a keyword and a target selling price. Output supplier offers, MOQ, supplier risk score, landed cost,
+             gross margin, break-even price, and a red / yellow / green verdict.</p>
+        </div>
+        <div class="card">
+          <h3>calc_margin</h3>
+          <p>Re-run the math on any offer: unit price, freight, duty, fees, and target price in, full cost breakdown
+             and margin out. Use it to test a supplier quote you already have.</p>
+        </div>
+        <div class="card">
+          <h3>Built for AI clients</h3>
+          <p>Standard MCP over HTTPS. Add one URL and one API key to your client, no SDK, no scraping code,
+             no browser automation to maintain.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sub">From subscription to first report in about five minutes.</p>
+      <div class="grid g3">
+        <div class="card">
+          <span class="num">1</span>
+          <h3>Subscribe</h3>
+          <p>Pick a plan at checkout. Your API key is issued automatically and shown on the confirmation page and receipt.</p>
+        </div>
+        <div class="card">
+          <span class="num">2</span>
+          <h3>Connect your client</h3>
+          <p>Add the server URL and your key as a Bearer token in Claude, Cursor, VS Code, or any MCP-compatible client.</p>
+        </div>
+        <div class="card">
+          <span class="num">3</span>
+          <h3>Ask for a verdict</h3>
+          <p>Ask: “Should I source wireless earbuds to sell at $39.99?” Get offers, landed cost, margin and a verdict.</p>
+        </div>
+      </div>
+
+      <div class="code" style="margin-top:26px">
+<pre><span class="m">// example output (illustrative)</span>
+{
+  <span class="k">"verdict"</span>: <span class="s">"green"</span>,
+  <span class="k">"product"</span>: <span class="s">"wireless earbuds"</span>,
+  <span class="k">"target_price_usd"</span>: 39.99,
+  <span class="k">"best_supplier"</span>: { <span class="k">"unit_price_usd"</span>: 6.85, <span class="k">"moq"</span>: 500, <span class="k">"risk_score"</span>: <span class="s">"low"</span> },
+  <span class="k">"landed_cost_usd"</span>: 9.42,
+  <span class="k">"gross_margin_pct"</span>: 61.3,
+  <span class="k">"notes"</span>: [<span class="s">"Electronics category carries higher return risk"</span>]
+}
+<span class="g">→ green: viable at the target price with 500-unit MOQ</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <h2>Pricing</h2>
+      <p class="sub">Start free. Upgrade when sourcing decisions become part of your weekly routine.</p>
+      <div class="plans">
+        <div class="plan">
+          <div class="tag">Free</div>
+          <div class="price">$0<span> / month</span></div>
+          <ul>
+            <li>3 sourcing reports per month</li>
+            <li>Both tools included</li>
+            <li>Community support by email</li>
+          </ul>
+          <a class="btn btn-ghost" href="mailto:sourcingsignal@protonmail.com?subject=SourcingSignal%20free%20key">Request a free key</a>
+        </div>
+        <div class="plan featured">
+          <div class="tag">Pro</div>
+          <div class="price">$15<span> / month</span></div>
+          <ul>
+            <li>100 sourcing reports per month</li>
+            <li>Both tools included</li>
+            <li>Email support, 1 business day</li>
+            <li>Cancel anytime, key deactivates at period end</li>
+          </ul>
+          <a class="btn" href="mailto:sourcingsignal@protonmail.com?subject=SourcingSignal%20Pro%20subscription">Subscribe</a>
+        </div>
+      </div>
+      <p class="cta-note" style="margin-top:18px">
+        Payments are processed by Creem as merchant of record. Prices are in USD. Taxes are handled at checkout where applicable.
+      </p>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>FAQ</h2>
+      <p class="sub">Short answers to the questions that decide whether this is useful to you.</p>
+      <details>
+        <summary>Do I need an Apify or scraping account?</summary>
+        <p>No. SourcingSignal runs the data collection for you and returns a structured decision. You only need an MCP-compatible AI client and your API key.</p>
+      </details>
+      <details>
+        <summary>What does the verdict mean?</summary>
+        <p>Green means the product clears your target price with acceptable margin and supplier risk. Yellow means viable only under conditions (higher MOQ, lower freight, adjusted price). Red means the numbers do not work at the target price.</p>
+      </details>
+      <details>
+        <summary>Which costs are included in landed cost?</summary>
+        <p>Unit price, inbound freight to your destination, duty (when provided), and platform or payment fees you configure. Duty defaults to 0% unless you pass the real rate for your HS code.</p>
+      </details>
+      <details>
+        <summary>Can I cancel?</summary>
+        <p>Yes, anytime from the receipt link or by emailing us. Your key stays active until the end of the paid period and is deactivated afterwards.</p>
+      </details>
+      <details>
+        <summary>What happens to my data?</summary>
+        <p>We store your subscription email, subscription ID, and a hash of your API key. We do not store the API key itself, and we do not sell or share personal data. Reports are generated per request and not retained.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="legal">
+    <div class="wrap legal">
+      <h2>Terms, refunds and privacy</h2>
+      <h3>Service</h3>
+      <p>SourcingSignal provides software access to sourcing analysis tools. Outputs are estimates based on third-party supplier data and the cost inputs you provide; they are not a guarantee of supplier performance, product compliance, or profitability.</p>
+      <h3>Billing and refunds</h3>
+      <p>Subscriptions are billed monthly in USD through Creem. The first payment is refundable in full within 7 days of purchase if the service does not work for you. After that, cancelling stops future charges and access continues until the end of the current period.</p>
+      <h3>Privacy</h3>
+      <p>We collect the email address and subscription identifiers needed to operate your account, and store API keys only as one-way hashes. Payment details are handled by Creem and never reach our servers. Request deletion at any time by email.</p>
+      <h3>Contact</h3>
+      <p><a href="mailto:sourcingsignal@protonmail.com">sourcingsignal@protonmail.com</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>© <span id="y">2026</span> SourcingSignal</div>
+    <div>
+      <a href="https://github.com/codthing/sourcing-signal">Documentation</a> ·
+      <a href="mailto:sourcingsignal@protonmail.com">Contact</a> ·
+      <a href="#legal">Terms &amp; Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
